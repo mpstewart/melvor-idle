@@ -1,0 +1,57 @@
+#!/usr/bin/perl
+# intended to be a savefile spoofing script for melvoidle.com. Doesn't seem to
+# actually work though.
+use strict;
+use warnings;
+use autodie qw( open close );
+use v5.10;
+
+use Carp qw( carp croak cluck confess );
+use Data::Dump qw( pp ddx );
+use File::Temp qw( tempfile );
+use File::Slurp qw( read_file );
+use IPC::Open3;
+use JSON::XS;
+use MIME::Base64;
+use Symbol qw( gensym );
+
+# base64 encoded save file from Melvor Idle
+my $encoded = <DATA>;
+
+# base64 to plaintext json
+my $json = decode_base64($encoded);
+
+# prettify json by deserializing and reserializing
+my $prettifier = JSON::XS->new->utf8->pretty->allow_nonref;
+my $inflated   = $prettifier->decode($json);
+my $pretty     = $prettifier->encode($inflated);
+
+# start editing
+my ($fh, $filename) = tempfile(
+  "melvor-edit-XXXX",
+  SUFFIX => '.json',
+  UNLINK => 1,
+);
+
+print $fh $pretty;
+close $fh;
+
+system(vim => $filename);
+
+# get the new save data
+my $edited = read_file($filename);
+
+# minify
+my $minifier = JSON::XS->new->utf8;
+   $inflated = $minifier->decode($edited);
+my $mini     = $minifier->encode($inflated);
+
+my $final = encode_base64($encoded, '') . "==";
+say $final;
+
+open my $xclip, '|xclip -selection general';
+print $xclip $final;
+
+
+__DATA__
+# paste user save here
