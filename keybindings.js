@@ -8,13 +8,13 @@
 // @run-at       document-idle
 // @grant        none
 // ==/UserScript==
-
-// function alias map; in case function names change
-goToPage    = changePage
-var curPage = currentPage
-
 (function() {
     'use strict';
+
+    // function alias map; in case function names change
+    goToPage    = changePage
+    var curPage = currentPage
+
 
     const BANKPAGE = 2;
 
